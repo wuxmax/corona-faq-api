@@ -31,9 +31,8 @@ async def root():
 # ------------------------------ #
 # Constants and Globals
 
-# ACTIVE_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
-
-ACTIVE_SCRAPERS = ["ber"]
+ACTIVE_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
+# ACTIVE_SCRAPERS = ["ber"]
 
 ES_URL = "http://es:9200"
 INDEX_NAME = "corona-faq"
@@ -55,7 +54,7 @@ faq_scraper = FAQScraperInterface(ACTIVE_SCRAPERS, faq_matcher, INDEX_NAME)
     tags=["FAQ Scraper"],
     response_model=ScraperResponse,
 )
-async def run_scrapers(update_index=True, return_faqs=False):
+async def run_scrapers(update_index:: bool = True, return_faqs: bool = False):
     status, data = faq_scraper.run(update_index=update_index)
 
     if return_faqs:    
