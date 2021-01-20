@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  es:
+    image: elasticsearch:7.10.1
+    volumes:
+      - ./elasticsearch-data:/usr/share/elasticsearch/data
+    environment:
+       - discovery.type=single-node
+  
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.prod
+    depends_on:
+      - es
+    volumes:
+      - ./language-models/:/models/
+    environment:
+       - PORT=$PROD_PORT
+    ports:
+      - "$PROD_PORT:$PROD_PORT"
+      

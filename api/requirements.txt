@@ -1,0 +1,15 @@
+fastapi
+requests
+pymongo
+
+coloredlogs
+
+bs4
+lxml
+
+sentence_transformers
+elasticsearch
+tqdm
+pandas
+xlrd >= 1.0.0
+  
