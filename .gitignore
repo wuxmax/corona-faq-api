@@ -1,0 +1,8 @@
+# OS, IDEs, etc.
+.DS_Store
+.vscode
+.python-version
+
+# Python and Juypter
+__pycache__
+.ipynb_checkpoints
