@@ -3,7 +3,7 @@ from types import ModuleType
 from typing import List, Tuple
 
 from models import Status, StatusCode, FAQ
-from faq_matcher import FAQMatcherInterface
+from faq_matcher.index import Index
 
 import logging
 logger = logging.getLogger(__name__)
@@ -21,10 +21,9 @@ class FAQScraperInterface():
 
     scraper_modules: List[ModuleType]
     
-    def __init__(self, active_scrapers: List[str], faq_matcher: FAQMatcherInterface, index_name: str):
+    def __init__(self, active_scrapers: List[str], faq_index: Index):
         self.scraper_modules = [importlib.import_module('.sources.' + scraper_name, package=__package__) for scraper_name in active_scrapers]
-        self.faq_matcher = faq_matcher
-        self.index_name = index_name
+        self.faq_index = faq_index
 
     def run(self, update_index: bool) -> Tuple[List[Status], List[FAQ]]:
 
@@ -42,7 +41,7 @@ class FAQScraperInterface():
         
         if update_index:
             try: 
-                self.faq_matcher.update_index(index_name=self.index_name, data=data)
+                self.faq_index.update_index(data)
             except AssertionError as e:
                 logger.exception("Updating FAQ index failed: " + str(e))
 

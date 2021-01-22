@@ -11,26 +11,6 @@ from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
-MODELS = [
-    {
-    'short_name': 'distiluse-base-multi',
-    'full_name': "distiluse-base-multilingual-cased-v2",
-    'vec_dims': 512
-    }
-    # {
-    # 'short_name': 'distilbert-multi-quora',
-    # 'full_name': "distilbert-multilingual-nli-stsb-quora-ranking",
-    # 'vec_dims': 768
-    # },
-    # {
-    # 'short_name': 'distiluse-base-multi',
-    # 'full_name': "distiluse-base-multilingual-cased",
-    # 'vec_dims': 512
-    # }
-]
-
-MODEL_DIR = "/models"
-
 class EncoderModel(BaseModel):
     short_name: str
     full_name: str
@@ -59,7 +39,7 @@ class EncoderManager:
     models: Mapping[str, EncoderModel]
     model_dir : str
     
-    def __init__(self, models: Mapping = MODELS, model_dir: str = MODEL_DIR, load_models: bool = False):
+    def __init__(self, models: Mapping, model_dir: str, load_models: bool = False):
         
         models_ = [EncoderModel(**model) for model in models]
 

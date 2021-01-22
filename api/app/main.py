@@ -7,7 +7,8 @@ import coloredlogs
 
 from models import FAQ, ScraperResponse, MatcherResponse, Status, StatusCode
 from faq_scraper import FAQScraperInterface
-from faq_matcher import FAQMatcherInterface
+from faq_matcher.index import Index
+from faq_matcher.matcher import FAQMatcher
 
 # ------------------------------ #
 # Logging
@@ -31,14 +32,15 @@ async def root():
 # ------------------------------ #
 # Constants and Globals
 
-ACTIVE_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
-#ACTIVE_SCRAPERS = ["ber"]
+# ACTIVE_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
+ACTIVE_SCRAPERS = ["ber", "bfg"]
 
-ES_URL = "http://es:9200"
 INDEX_NAME = "corona-faq"
 
-faq_matcher = FAQMatcherInterface(ES_URL, [INDEX_NAME])
-faq_scraper = FAQScraperInterface(ACTIVE_SCRAPERS, faq_matcher, INDEX_NAME)
+faq_index = Index(INDEX_NAME, data_model=FAQ)
+faq_scraper = FAQScraperInterface(active_scrapers=ACTIVE_SCRAPERS, faq_index=faq_index)
+faq_matcher = FAQMatcher(index=faq_index)
+
 
 # clear_indices=True)
 
@@ -67,9 +69,14 @@ async def run_scrapers(update_index: bool = True, return_faqs: bool = False):
     tags=["FAQ Matcher"],
     response_model=MatcherResponse,
 )
-async def match_faqs(search_string: str):
-    search_result = faq_matcher.search_index(INDEX_NAME, search_string=search_string, 
-        semantic_search=True, model="distiluse-base-multi", n_hits=1)
+async def match_faqs(search_string: str, nationwide_only: bool = False, filter_src_id: str = None):
+    
+    filter_fields = {}
+    if nationwide_only: filter_fields["nationwide"] = True
+    if filter_src_id: filter_fields["src_id"] = filter_src_id
+    
+    search_result = faq_matcher.search_index(search_string=search_string, filter_fields=filter_fields,
+        search_mode='semantic_search', model="distiluse-base-multi", n_hits=1)
 
     if search_result.hits: 
         response = MatcherResponse(status=StatusCode.SUCCESS, best_match=search_result.hits[0])

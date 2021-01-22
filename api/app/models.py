@@ -9,10 +9,6 @@ from utils import get_timestamp
 class IndexData(BaseModel):
     es_mapping_properties: ClassVar[dict]
 
-class Index(BaseModel):
-    name: str
-    data_model: Type[IndexData]
-
 class SearchResult(BaseModel):
     search_string: str
     hits: List[IndexData]
