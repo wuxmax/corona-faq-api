@@ -91,14 +91,12 @@ class FAQMatcher():
             }
         }
 
-        filter_query = {
-            "bool" : {
-                "filter" : []  
-            }
-        }
+        filter_query = {"bool" : {"filter" : []}}
+
+        match_all_query = {"match_all": {}}
 
         if not filter_fields:
-            semantic_query["script_score"]["query"] = {"query": {"match_all": {}}}
+            semantic_query["script_score"]["query"] = match_all_query
         else:
             filter_query["bool"]["filter"] = [{"term" : {key: value}}
                 for key, value in filter_fields.items()]

@@ -1,5 +1,6 @@
 import os
 import logging
+import time
 
 from elasticsearch import Elasticsearch
 import requests
