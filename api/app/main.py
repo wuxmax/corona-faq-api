@@ -32,20 +32,14 @@ async def root():
 # ------------------------------ #
 # Constants and Globals
 
-# ACTIVE_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
-ACTIVE_SCRAPERS = ["ber", "bfg"]
+ACTIVE_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
+# ACTIVE_SCRAPERS = ["ber", "bfg"]
 
 INDEX_NAME = "corona-faq"
 
 faq_index = Index(INDEX_NAME, data_model=FAQ)
 faq_scraper = FAQScraperInterface(active_scrapers=ACTIVE_SCRAPERS, faq_index=faq_index)
 faq_matcher = FAQMatcher(index=faq_index)
-
-
-# clear_indices=True)
-
-# _, data = faq_scraper.run(update_db=False)
-# faq_matcher.index_data(INDEX_NAME, data,)
 
 # ------------------------------ #
 # Endpoints
