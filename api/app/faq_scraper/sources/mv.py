@@ -8,6 +8,7 @@ source_name = "Ministerpräsidentin des Landes Mecklenburg-Vorpommern - Staatska
 root_url = "https://www.regierung-mv.de"
 source_url = root_url + "/service/Corona-FAQs/"
 
+
 def get_faq():
     html = get_html(source_url)
     soup = BeautifulSoup(html, features="lxml")
@@ -20,6 +21,7 @@ def get_faq():
         faq_ += get_topic_faq(a_topic['href'])
     
     return faq_
+
 
 def get_topic_faq(topic_url: str):
     html = get_html(root_url + topic_url)
