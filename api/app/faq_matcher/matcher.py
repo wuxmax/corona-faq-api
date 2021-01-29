@@ -15,9 +15,7 @@ from . import ES, ENCODER
 logger = logging.getLogger(__name__)
 
 
-
-
-class FAQMatcher():
+class FAQMatcher:
     index: Index
     encoder: EncoderManager = ENCODER
     es: Elasticsearch = ES
@@ -28,8 +26,8 @@ class FAQMatcher():
     def __init__(self, index: Index):
         self.index = index
     
-    def search_index(self, search_string: str, search_mode: str, filter_fields: Mapping = None, 
-        model: str = None, n_hits: int = 5, **kwargs) -> SearchResult:        
+    def search_index(self, search_string: str, search_mode: str, filter_fields: Mapping = None,
+                     model: str = None, n_hits: int = 5, **kwargs) -> SearchResult:
         
         try:
             assert search_mode in self.search_modes
@@ -54,12 +52,10 @@ class FAQMatcher():
         #     es_search_results, encoding_time = self._lexical_semantic_rerank_search(index, search_string, model=model, **kwargs)
         # else:
         #     logger.error("Invalid argument combination given for search_index function!")
-
         
         embedding, encoding_time = self.encoder.encode_timed(search_string, model)
         es_query = self.build_query(search_mode, filter_fields, model, embedding)
         es_search_results = self.es.search(index=self.index.name, body=es_query)
-
 
         hits = [FAQ(**hit['_source']) for hit in es_search_results['hits']['hits'][:n_hits]]
 
@@ -75,8 +71,7 @@ class FAQMatcher():
 
         return search_result
 
-    
-    def build_query(self, search_mode: str, filter_fields: Mapping = None, model: str = None, embedding = None):
+    def build_query(self, search_mode: str, filter_fields: Mapping = None, model: str = None, embedding=None):
         query = {"query": {}}
 
         semantic_query = {
@@ -91,15 +86,15 @@ class FAQMatcher():
             }
         }
 
-        filter_query = {"bool" : {"filter" : []}}
+        filter_query = {"bool": {"filter": []}}
 
         match_all_query = {"match_all": {}}
 
         if not filter_fields:
             semantic_query["script_score"]["query"] = match_all_query
         else:
-            filter_query["bool"]["filter"] = [{"term" : {key: value}}
-                for key, value in filter_fields.items()]
+            filter_query["bool"]["filter"] = [{"term": {key: value}}
+                                              for key, value in filter_fields.items()]
             semantic_query["script_score"]["query"] = filter_query
 
         query["query"] = semantic_query
@@ -107,8 +102,6 @@ class FAQMatcher():
         logger.info(f"ES query:\n{query}")
 
         return query
-
-
 
         # lexical_query = {"query": {"match": {"q_txt": search_string}}})
 
@@ -135,10 +128,6 @@ class FAQMatcher():
         #     }
         # }
 
-        
-
-
-    
     # def _lexical_search(self, search_string: str) -> Dict:
     #     """ Search the ES index using BM25 lexical search """
         

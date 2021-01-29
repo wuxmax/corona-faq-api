@@ -9,6 +9,7 @@ from models import FAQ, ScraperResponse, MatcherResponse, Status, StatusCode
 from faq_scraper import FAQScraperInterface
 from faq_matcher.index import Index
 from faq_matcher.matcher import FAQMatcher
+from utils import location_string2src_id
 
 # ------------------------------ #
 # Logging
@@ -25,9 +26,11 @@ coloredlogs.install(
 app_title = "Corona FAQ API"
 app = FastAPI(title=app_title)
 
+
 @app.get("/", include_in_schema=False, response_class=HTMLResponse)
 async def root():
-    return f"<html><head><title>{app_title}</title></head><body>Welcome! Open /docs to see API documentation.</body></html>"
+    return f"<html><head><title>{app_title}</title></head><body>" \
+           f"Welcome! Open /docs to see API documentation.</body></html>"
 
 # ------------------------------ #
 # Constants and Globals
@@ -43,6 +46,7 @@ faq_matcher = FAQMatcher(index=faq_index)
 
 # ------------------------------ #
 # Endpoints
+
 
 @app.get(
     path="/run_scrapers",
@@ -63,14 +67,18 @@ async def run_scrapers(update_index: bool = True, return_faqs: bool = False):
     tags=["FAQ Matcher"],
     response_model=MatcherResponse,
 )
-async def match_faqs(search_string: str, nationwide_only: bool = False, filter_src_id: str = None):
+async def match_faqs(search_string: str, nationwide_only: bool = False, location_string: str = None):
     
     filter_fields = {}
-    if nationwide_only: filter_fields["nationwide"] = True
-    if filter_src_id: filter_fields["src_id"] = filter_src_id
+    if nationwide_only:
+        filter_fields["nationwide"] = True
+    elif location_string:
+        filter_src_id = location_string2src_id(location_string)
+        if filter_src_id:
+            filter_fields["src_id"] = filter_src_id
     
     search_result = faq_matcher.search_index(search_string=search_string, filter_fields=filter_fields,
-        search_mode='semantic_search', model="distiluse-base-multi", n_hits=1)
+                                             search_mode='semantic_search', model="distiluse-base-multi", n_hits=1)
 
     if search_result.hits: 
         response = MatcherResponse(status=StatusCode.SUCCESS, best_match=search_result.hits[0])

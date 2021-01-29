@@ -9,6 +9,7 @@ from utils import get_timestamp
 class IndexData(BaseModel):
     es_mapping_properties: ClassVar[dict]
 
+
 class SearchResult(BaseModel):
     search_string: str
     hits: List[IndexData]
@@ -17,6 +18,7 @@ class SearchResult(BaseModel):
     encoding_time: Optional[float] = None # time in seconds
 
 # ------------------- #
+
 
 class FAQ(IndexData):
     id: str
@@ -69,17 +71,21 @@ class FAQ(IndexData):
 
 # ------------------- #
 
+
 class StatusCode(IntEnum):
     SUCCESS = 0
     ERROR = 1
+
 
 class Status(BaseModel):
     scr_id: str
     status: StatusCode
 
+
 class ScraperResponse(BaseModel):
     srcaper_status: List[Status]
     faq_data: Optional[List[FAQ]]
+
 
 class MatcherResponse(BaseModel):
     status: StatusCode

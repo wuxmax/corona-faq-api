@@ -14,7 +14,8 @@ from . import ES, ENCODER
 
 logger = logging.getLogger(__name__)
 
-class Index():
+
+class Index:
     name: str
     data_model: IndexData
     es: Elasticsearch = ES
@@ -24,13 +25,13 @@ class Index():
         self.name = index_name
         self.data_model = data_model
 
-        time.sleep(3) # avoid 503 TransportError
+        time.sleep(3)  # avoid 503 TransportError
     
         # delete index
         if clear_index and self.es.indices.exists(self.name):
             self.es.indices.delete(index_name)
 
-        # create index if nonexisten or empty
+        # create index if non-existent or empty
         if self.es.indices.exists(self.name) and self.es.count(index=self.name)['count'] > 0:
             logger.warn("Elasticsearch index already exists and is not empty!")
         else:
@@ -40,8 +41,8 @@ class Index():
                 es_mapping_properties['q_vec_' + model_name] = {"type": "dense_vector", "dims": model.vec_dims}
             es_index_body = {"mappings": {"properties": es_mapping_properties}}
 
-            self.es.indices.create(index=self.name, body=es_index_body, ignore=[400]) # ignore index already exists errors
-    
+            # ignore index already exists errors
+            self.es.indices.create(index=self.name, body=es_index_body, ignore=[400])
 
     def index_data(self, data: Union[IndexData, List[IndexData]]) -> None:
         logger.info("Indexing data...")
@@ -82,7 +83,7 @@ class Index():
                 pbar.update(chunk_size)
         
         # After indexing seems to need some time before the first query
-        logger.info("Waiting for Elasticserach to be updated...")
+        logger.info("Waiting for Elasticsearch to be updated...")
         self.es.indices.refresh(self.name)
         time.sleep(3)
         
@@ -103,5 +104,4 @@ class Index():
 
         self.es.indices.refresh(self.name)
         self.index_data(data)
-    
-    
+

@@ -1,6 +1,7 @@
 # OS, IDEs, etc.
 .DS_Store
 .vscode
+.idea
 .python-version
 
 # Python and Juypter
