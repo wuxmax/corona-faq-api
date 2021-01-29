@@ -76,6 +76,8 @@ async def match_faqs(search_string: str, nationwide_only: bool = False, location
         filter_src_id = location_string2src_id(location_string)
         if filter_src_id:
             filter_fields["src_id"] = filter_src_id
+        else:
+            filter_fields["nationwide"] = True
     
     search_result = faq_matcher.search_index(search_string=search_string, filter_fields=filter_fields,
                                              search_mode='semantic_search', model="distiluse-base-multi", n_hits=1)
