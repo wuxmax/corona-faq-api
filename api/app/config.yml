@@ -1,0 +1,82 @@
+ACTIVE_CONFIG: DEFAULT
+
+DEFAULT:
+  INDEX_NAME: corona-faq
+
+  # names of scrapes which should be run
+  ACTIVE_SCRAPERS:
+    - rki
+    - bfg
+    - ber
+    - hh
+    - bb
+    - mv
+    - sn
+    - sh
+    - th
+    - nrw
+    - bay
+    - bw
+    - rlp
+    - st
+    - hb
+    - he
+
+  DEFAULT_SEARCH_MODE: lexical_search_semantic_rerank
+
+  DEFAULT_RERANK_WEIGHTS:
+    query_weight: 0.5
+    rescore_query_weight: 0.5
+
+  # encoder model config
+  DEFAULT_MODEL: distiluse-base-multi
+  MODELS:
+    - short_name: distiluse-base-multi
+      full_name: distiluse-base-multilingual-cased-v2
+      vec_dims: 512
+    - short_name: paraphrase-xlm-r-multi
+      full_name: paraphrase-xlm-r-multilingual-v1
+      vec_dims: 768
+#    - short_name: quora-distilbert-multi
+#      full_name: quora-distilbert-multilingual
+#      vec_dims: 768
+#    - short_name: stsb-xlm-r-multi
+#      full_name: stsb-xlm-r-multilingual
+#      vec_dims: 768
+  MODEL_DIR: /models
+
+
+TEST:
+  INDEX_NAME: corona-faq
+
+  # names of scrapes which should be run
+  ACTIVE_SCRAPERS:
+    - rki
+    - ber
+    - mv
+
+  DEFAULT_SEARCH_MODE: lexical_search_semantic_rerank
+
+  DEFAULT_RERANK_WEIGHTS:
+    query_weight: 0.5
+    rescore_query_weight: 0.5
+
+  # encoder model config
+  DEFAULT_MODEL: distiluse-base-multi
+  MODELS:
+    - short_name: distiluse-base-multi
+      full_name: distiluse-base-multilingual-cased-v2
+      vec_dims: 512
+    - short_name: paraphrase-xlm-r-multi
+      full_name: paraphrase-xlm-r-multilingual-v1
+      vec_dims: 768
+    - short_name: quora-distilbert-multi
+      full_name: quora-distilbert-multilingual
+      vec_dims: 768
+    - short_name: stsb-xlm-r-multi
+      full_name: stsb-xlm-r-multilingual
+      vec_dims: 768
+  MODEL_DIR: /models
+
+
+

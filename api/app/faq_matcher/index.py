@@ -5,7 +5,6 @@ import logging
 
 from tqdm.auto import tqdm
 from elasticsearch import Elasticsearch, helpers
-from sentence_transformers import SentenceTransformer
 
 from models import IndexData
 from .encoder import EncoderManager
@@ -33,7 +32,7 @@ class Index:
 
         # create index if non-existent or empty
         if self.es.indices.exists(self.name) and self.es.count(index=self.name)['count'] > 0:
-            logger.warn("Elasticsearch index already exists and is not empty!")
+            logger.warning("Elasticsearch index already exists and is not empty!")
         else:
             # create elasticsearch index mapping
             es_mapping_properties = self.data_model.es_mapping_properties
@@ -48,7 +47,7 @@ class Index:
         logger.info("Indexing data...")
 
         if self.es.count(index=self.name)['count'] > 0:
-            logger.warn("Elasticsearch index already exists and is not empty! Abort indexing.")
+            logger.warning("Elasticsearch index already exists and is not empty! Abort indexing.")
             return
 
         if not isinstance(data, List):

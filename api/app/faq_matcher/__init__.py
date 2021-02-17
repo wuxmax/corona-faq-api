@@ -7,11 +7,9 @@ import requests
 from requests import RequestException
 
 from .encoder import EncoderManager
+from config import c
 
 logger = logging.getLogger(__name__)
-
-ES: Elasticsearch
-ENCODER: EncoderManager
 
 # Initializing Elasticsearch
 # --------------------------
@@ -31,30 +29,10 @@ else:
     logger.error("Could not connect to ElasticSearch server, exiting ...")
     exit() 
 
-ES = Elasticsearch(es_host_url)
+ES: Elasticsearch = Elasticsearch(es_host_url)
 
 # Initialising EncoderManger
 # --------------------------
 
-MODELS = [
-    {
-    'short_name': 'distiluse-base-multi',
-    'full_name': "distiluse-base-multilingual-cased-v2",
-    'vec_dims': 512
-    }
-    # {
-    # 'short_name': 'distilbert-multi-quora',
-    # 'full_name': "distilbert-multilingual-nli-stsb-quora-ranking",
-    # 'vec_dims': 768
-    # },
-    # {
-    # 'short_name': 'distiluse-base-multi',
-    # 'full_name': "distiluse-base-multilingual-cased",
-    # 'vec_dims': 512
-    # }
-]
-
-MODEL_DIR = "/models"
-
-ENCODER = EncoderManager(models=MODELS, model_dir=MODEL_DIR, load_models=True)
+ENCODER: EncoderManager = EncoderManager(models=c.MODELS, model_dir=c.MODEL_DIR, load_models=True)
 

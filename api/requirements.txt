@@ -1,8 +1,9 @@
 fastapi
 requests
-pymongo
 
 coloredlogs
+tabulate
+pyyaml
 
 bs4
 lxml
@@ -13,4 +14,6 @@ tqdm
 pandas
 xlrd >= 1.0.0
 geopy
-  
+protobuf
+
+jupyter

@@ -11,6 +11,7 @@ from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
+
 class EncoderModel(BaseModel):
     short_name: str
     full_name: str
@@ -44,7 +45,8 @@ class EncoderManager:
         models_ = [EncoderModel(**model) for model in models]
 
         if load_models:
-            for model in models_: model.load(model_dir)
+            for model in models_:
+                model.load(model_dir)
         
         self.models = {model.short_name: model for model in models_}
         self.model_dir = model_dir

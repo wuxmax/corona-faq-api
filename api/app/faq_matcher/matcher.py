@@ -1,10 +1,8 @@
 from typing import Dict, List, Tuple, Union, Mapping
-from enum import Enum
-import time
 import logging
+import json
 
 from elasticsearch import Elasticsearch
-from sentence_transformers import SentenceTransformer
 
 from models import SearchResult, FAQ
 from .index import Index
@@ -25,44 +23,37 @@ class FAQMatcher:
 
     def __init__(self, index: Index):
         self.index = index
-    
+
     def search_index(self, search_string: str, search_mode: str, filter_fields: Mapping = None,
-                     model: str = None, n_hits: int = 5, **kwargs) -> SearchResult:
-        
+                     model: str = None, rerank_weights: Mapping[str, float] = None,
+                     n_hits: int = 5) -> Union[SearchResult, None]:
+
         try:
             assert search_mode in self.search_modes
         except AssertionError:
             logger.error("Invalid search mode given: " + search_mode)
+            return None
 
+        embedding = None
+        encoding_time = None
+        if search_mode != "lexical_search":
+            try:
+                assert model is not None
+                assert model in self.encoder.models
+                embedding, encoding_time = self.encoder.encode_timed(search_string, model)
+            except AssertionError:
+                logger.error("No model was given for semantic search or semantic reranking!")
+                return None
 
-        # if not semantic_search and not semantic_rerank:
-        #     es_search_results = self._lexical_search(search_string)
-        
-        # elif semantic_search or semantic_rerank:
-        #     try:
-        #         assert model != None
-        #     except AssertionError:
-        #         logger.error("No model was given for semantic search or sematnic rerank!")
-            
-        #     if semantic_search:
-        #         es_search_results, encoding_time = self._semantic_search(index, search_string, model=model)
-        #     if semantic_rerank:
-        #         es_search_results, encoding_time = self._semantic_search(index, search_string, model=model)
-
-        #     es_search_results, encoding_time = self._lexical_semantic_rerank_search(index, search_string, model=model, **kwargs)
-        # else:
-        #     logger.error("Invalid argument combination given for search_index function!")
-        
-        embedding, encoding_time = self.encoder.encode_timed(search_string, model)
-        es_query = self.build_query(search_mode, filter_fields, model, embedding)
+        es_query = self.build_query(search_mode, search_string, filter_fields, model, embedding, rerank_weights)
         es_search_results = self.es.search(index=self.index.name, body=es_query)
 
         hits = [FAQ(**hit['_source']) for hit in es_search_results['hits']['hits'][:n_hits]]
 
         search_result = SearchResult(
-            search_string = search_string,
-            hits = hits,
-            search_time = es_search_results['took'] / 1000.0 # elasticsearch gives time in ms
+            search_string=search_string,
+            hits=hits,
+            search_time=es_search_results['took'] / 1000.0  # elasticsearch gives time in ms
         )
 
         if model and encoding_time:
@@ -71,8 +62,22 @@ class FAQMatcher:
 
         return search_result
 
-    def build_query(self, search_mode: str, filter_fields: Mapping = None, model: str = None, embedding=None):
+    def build_query(self, search_mode: str, search_string: str, filter_fields: Mapping = None,
+                    model: str = None, embedding=None, rerank_weights: Mapping[str, float] = None):
+
         query = {"query": {}}
+
+        match_all_query = {"match_all": {}}
+
+        filter_query = {"bool": {"filter": []}}
+
+        lexical_query = {
+            "multi_match": {
+                "query": search_string,
+                "type": "most_fields",
+                "fields": ["q_txt", "a_txt"]
+            }
+        }
 
         semantic_query = {
             "script_score": {
@@ -86,140 +91,47 @@ class FAQMatcher:
             }
         }
 
-        filter_query = {"bool": {"filter": []}}
+        rescore_query = {
+            "window_size": 10,
+            "query": {
+                "rescore_query": {},
+                "query_weight": 0.5,
+                "rescore_query_weight": 0.5
+            }
+        }
 
-        match_all_query = {"match_all": {}}
-
-        if not filter_fields:
-            semantic_query["script_score"]["query"] = match_all_query
-        else:
+        if filter_fields:
             filter_query["bool"]["filter"] = [{"term": {key: value}}
                                               for key, value in filter_fields.items()]
-            semantic_query["script_score"]["query"] = filter_query
 
-        query["query"] = semantic_query
+            lexical_query_filtered = filter_query.copy()
+            lexical_query_filtered["bool"]["must"] = lexical_query
+            lexical_query = lexical_query_filtered
 
-        logger.info(f"ES query:\n{query}")
+            if search_mode == "lexical_search":
+                query["query"] = lexical_query
+
+            else:
+                semantic_query["script_score"]["query"] = filter_query
+
+        if not filter_fields:
+            if search_mode == "lexical_search":
+                query["query"] = lexical_query
+            else:
+                semantic_query["script_score"]["query"] = match_all_query
+
+        if search_mode == "semantic_search":
+            query["query"] = semantic_query
+        elif search_mode == "lexical_search_semantic_rerank":
+            rescore_query["query"]["rescore_query"] = semantic_query
+            if rerank_weights:
+                rescore_query["query"]["query_weight"] = rerank_weights["query_weight"]
+                rescore_query["query"]["rescore_query_weight"] = rerank_weights["rescore_query_weight"]
+            query["query"] = lexical_query
+            query["rescore"] = rescore_query
+
+        # logger.info(f"ES query JSON:\n{json.dumps(query)}")
 
         return query
 
-        # lexical_query = {"query": {"match": {"q_txt": search_string}}})
-
-        # rescore_query = {
-        #     "rescore": {
-        #                     "window_size": 100,
-        #                     "query": {
-        #                         "rescore_query" : {
-        #                             "script_score": {
-        #                                 "query": {
-        #                                     "match_all": {}
-        #                                 },
-        #                                 "script": {
-        #                                     "source": f"cosineSimilarity(params.queryVector, 'q_vec_{model}') + 1.0",
-        #                                     "params": {
-        #                                         "queryVector": embedding
-        #                                     }
-        #                                 }
-        #                             }
-        #                         },
-        #                         "query_weight": 0.0,
-        #                         "rescore_query_weight" : 1.0
-        #                     }
-        #     }
-        # }
-
-    # def _lexical_search(self, search_string: str) -> Dict:
-    #     """ Search the ES index using BM25 lexical search """
-        
-    #     return self.es.search(index=index.name, body={"query": {"match": {"q_txt": search_string}}})
-
-    # def _semantic_search(self, search_string: str, model: str) -> Tuple[Dict, int]:
-    #     """ Search the ES index using cosine similarity between encoding vectors """
-
-    #     embedding, encoding_time = self.encoder.encode_timed(search_string, model)
-
-    #     es_search_result = self.es.search(index=self.index.name, body={
-    #         "query": {
-    #             "script_score": {
-    #                 "query": {
-    #                     "match_all": {}
-    #                 },
-    #                 "script": {
-    #                     "source": f"cosineSimilarity(params.queryVector, 'q_vec_{model}') + 1.0",
-    #                     "params": {
-    #                         "queryVector": embedding
-    #                     }
-    #                 }
-    #             }
-    #         }
-    #     })
-
-    #     return es_search_result, encoding_time
-
-    # def _semantic_search_filtered(self, index: Index, search_string: str, model: str, 
-    #     nationwide: bool, scr_id: str) -> Tuple[Dict, int])
-    # """ Search the ES index using cosine similarity between encoding vectors """
-
-    #     embedding, encoding_time = self.encoder.encode_timed(search_string, model)
-
-    #     es_search_result = self.es.search(index=index.name, body={
-    #         "query": {
-    #             "bool": {
-    #                 "filter": [
-    #                     {"term": {"nationwide": nationwide}},
-    #                     {"term": {"src_id": src_id}}]}
-    #             },
-    #             "script_score": {
-    #                 "query": {
-    #                     "match_all": {}
-    #                 },
-    #                 "script": {
-    #                     "source": f"cosineSimilarity(params.queryVector, 'q_vec_{model}') + 1.0",
-    #                     "params": {
-    #                         "queryVector": embedding
-    #                     }
-    #                 }
-    #             }
-    #         }
-    #     })
-
-    #     return es_search_result, encoding_time
-
-
-
-    # def _lexical_semantic_rerank_search(self, index: Index, search_string: str, model: str,
-    #     rescore_window: int = 100) -> Tuple[Dict, int]:
-    #     """ Search the ES index using BM25 search and rescore by cosine similarity between encoding vectors """
-
-    #     embedding, encoding_time = self.encoder.encode_timed(search_string, model)
-
-    #     es_search_result = self.es.search(index=index.name, body={
-    #         "query": {
-    #             "match": {
-    #                 "q_txt": search_string
-    #             }
-    #         },
-    #         "rescore": {
-    #             "window_size": rescore_window,
-    #             "query": {
-    #                 "rescore_query" : {
-    #                     "script_score": {
-    #                         "query": {
-    #                             "match_all": {}
-    #                         },
-    #                         "script": {
-    #                             "source": f"cosineSimilarity(params.queryVector, 'q_vec_{model}') + 1.0",
-    #                             "params": {
-    #                                 "queryVector": embedding
-    #                             }
-    #                         }
-    #                     }
-    #                 },
-    #                 "query_weight": 0.0,
-    #                 "rescore_query_weight" : 1.0
-    #             }
-    #         }
-    #     })
-
-    #     return es_search_result, encoding_time
 

@@ -1,4 +1,3 @@
-from typing import List
 import logging
 
 from fastapi import FastAPI
@@ -10,6 +9,7 @@ from faq_scraper import FAQScraperInterface
 from faq_matcher.index import Index
 from faq_matcher.matcher import FAQMatcher
 from utils import location_string2src_id
+from config import c
 
 # ------------------------------ #
 # Logging
@@ -33,15 +33,10 @@ async def root():
            f"Welcome! Open /docs to see API documentation.</body></html>"
 
 # ------------------------------ #
-# Constants and Globals
+# Globals
 
-ACTIVE_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
-# ACTIVE_SCRAPERS = ["ber", "bfg"]
-
-INDEX_NAME = "corona-faq"
-
-faq_index = Index(INDEX_NAME, data_model=FAQ)
-faq_scraper = FAQScraperInterface(active_scrapers=ACTIVE_SCRAPERS, faq_index=faq_index)
+faq_index = Index(c.INDEX_NAME, data_model=FAQ)
+faq_scraper = FAQScraperInterface(faq_index=faq_index)
 faq_matcher = FAQMatcher(index=faq_index)
 
 # ------------------------------ #
@@ -57,9 +52,16 @@ async def run_scrapers(update_index: bool = True, return_faqs: bool = False):
     status, data = faq_scraper.run(update_index=update_index)
 
     if return_faqs:    
-        return ScraperResponse(srcaper_status=status, faq_data=data)
+        return ScraperResponse(scraper_status=status, faq_data=data)
     else:
-        return ScraperResponse(srcaper_status=status)
+        return ScraperResponse(scraper_status=status)
+
+
+# Enums to predefine valid parameter values
+# SearchMode = Enum("SearchMode", faq_matcher.search_modes)
+# ModelName = Enum("ModelName", list(faq_matcher.encoder.models.keys()))
+# default_search_mode = [search_mode for search_mode in SearchMode if search_mode.value == c.DEFAULT_SEARCH_MODE][0]
+# default_model_name = [model_name for model_name in ModelName if model_name.value == c.DEFAULT_MODEL][0]
 
 
 @app.get(
@@ -67,24 +69,31 @@ async def run_scrapers(update_index: bool = True, return_faqs: bool = False):
     tags=["FAQ Matcher"],
     response_model=MatcherResponse,
 )
-async def match_faqs(search_string: str, nationwide_only: bool = False, location_string: str = None):
+async def match_faqs(search_string: str, nationwide_only: bool = False, location_string: str = None,
+                     search_mode: str = c.DEFAULT_SEARCH_MODE, model_name: str = c.DEFAULT_MODEL,
+                     lexical_weight: float = c.DEFAULT_RERANK_WEIGHTS["query_weight"],
+                     semantic_weight: float = c.DEFAULT_RERANK_WEIGHTS["rescore_query_weight"]):
     
     filter_fields = {}
-    if nationwide_only:
-        filter_fields["nationwide"] = True
-    elif location_string:
-        filter_src_id = location_string2src_id(location_string)
-        if filter_src_id:
-            filter_fields["src_id"] = filter_src_id
-        else:
-            filter_fields["nationwide"] = True
-    
-    search_result = faq_matcher.search_index(search_string=search_string, filter_fields=filter_fields,
-                                             search_mode='semantic_search', model="distiluse-base-multi", n_hits=1)
 
-    if search_result.hits: 
+    filter_src_id = None
+    if location_string:
+        filter_src_id = location_string2src_id(location_string)
+
+    if nationwide_only or not filter_src_id:
+        filter_fields["nationwide"] = True
+    else:
+        filter_fields["src_id"] = filter_src_id
+
+    rerank_weights = {"query_weight": lexical_weight, "rescore_query_weight": semantic_weight}
+
+    search_result = faq_matcher.search_index(search_string=search_string, filter_fields=filter_fields,
+                                             search_mode=search_mode, model=model_name,
+                                             rerank_weights=rerank_weights, n_hits=1)
+
+    if search_result and search_result.hits:
         response = MatcherResponse(status=StatusCode.SUCCESS, best_match=search_result.hits[0])
-    else: 
+    else:
         response = MatcherResponse(status=StatusCode.ERROR)
 
     return response

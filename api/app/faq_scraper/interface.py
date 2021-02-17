@@ -4,25 +4,29 @@ from typing import List, Tuple
 
 from models import Status, StatusCode, FAQ
 from faq_matcher.index import Index
+from config import c
 
 import logging
 logger = logging.getLogger(__name__)
 
-# class FAQScraper():
-#     source_id: str
-#     source_name: str
-#     root_url: str
-#     source_url: str
-#
-#     def get_faq(self):
-#         raise NotImplementedError( "Method of abstract class FAQScraper called. This class should not be instantiated directly!" )
 
-class FAQScraperInterface():
+ALL_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
+
+
+class FAQScraperInterface:
 
     scraper_modules: List[ModuleType]
+    active_scrapers: List[str] = c.ACTIVE_SCRAPERS
     
-    def __init__(self, active_scrapers: List[str], faq_index: Index):
-        self.scraper_modules = [importlib.import_module('.sources.' + scraper_name, package=__package__) for scraper_name in active_scrapers]
+    def __init__(self, faq_index: Index):
+        try:
+            assert all(scraper in ALL_SCRAPERS for scraper in self.active_scrapers)
+        except AssertionError:
+            logger.error("Not all configured active scrapers are valid!")
+            exit(1)
+
+        self.scraper_modules = [importlib.import_module('.sources.' + scraper_name, package=__package__)
+                                for scraper_name in self.active_scrapers]
         self.faq_index = faq_index
 
     def run(self, update_index: bool) -> Tuple[List[Status], List[FAQ]]:
@@ -32,11 +36,16 @@ class FAQScraperInterface():
 
         for scraper in self.scraper_modules:
             try:
-                data += scraper.get_faq()
-                status += [Status(scr_id=scraper.source_id, status=StatusCode.SUCCESS)]
+                scraper_data = scraper.get_faq()
+                if scraper_data:
+                    data += scraper_data
+                    status += [Status(scr_id=scraper.source_id, status=StatusCode.SUCCESS)]
+                else:
+                    logger.warning('Crawling resulted in no FAQs: ' + scraper.source_url)
+                    status += [Status(scr_id=scraper.source_id, status=StatusCode.ERROR)]
 
             except BaseException:
-                logger.exception('Exception while crawling ' + scraper.source_url)
+                logger.exception('Exception while crawling: ' + scraper.source_url)
                 status += [Status(scr_id=scraper.source_id, status=StatusCode.ERROR)]
         
         if update_index:

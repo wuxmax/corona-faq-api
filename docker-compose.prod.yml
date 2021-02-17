@@ -15,9 +15,13 @@ services:
     depends_on:
       - es
     volumes:
-      - ./language-models/:/models/
+      - ./embedding-models/:/models/
     environment:
        - PORT=$PROD_PORT
+       - PRE_START_PATH="/scripts/start-jupyter.sh"
+       - GRACEFUL_TIMEOUT=300
+       - WEB_CONCURRENCY=2
     ports:
       - "$PROD_PORT:$PROD_PORT"
+      - "$JUP_PORT:$JUP_PORT"
       

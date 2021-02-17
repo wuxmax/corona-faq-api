@@ -83,7 +83,7 @@ class Status(BaseModel):
 
 
 class ScraperResponse(BaseModel):
-    srcaper_status: List[Status]
+    scraper_status: List[Status]
     faq_data: Optional[List[FAQ]]
 
 

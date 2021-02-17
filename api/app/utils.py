@@ -49,7 +49,7 @@ def question2label(source: str, question: str, n=3) -> str:
 
 # ALL_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
 src_id_mapping = {
-    "Berlin": "bb",
+    "Berlin": "ber",
     "Hamburg": "hh",
     "Brandenburg": "bb",
     "Mecklenburg-Vorpommern": "mv",

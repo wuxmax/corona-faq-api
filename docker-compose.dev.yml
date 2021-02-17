@@ -13,9 +13,9 @@ services:
       # Enable Docker Swarm mode
       # - --providers.docker.swarmmode
       # Enable the access log, with HTTP requests
-      # - --accesslog
+      - --accesslog
       # Enable the Traefik log, for configurations and errors
-      # - --log
+      - --log
       # Enable the Dashboard and API
       - --api.insecure=true
     ports:
@@ -26,10 +26,6 @@ services:
     depends_on: 
       - proxy
     image: elasticsearch:7.10.1
-    networks: 
-      default:
-        aliases:
-          - ${ES_HOST}
     volumes:
       - ./elasticsearch-data:/usr/share/elasticsearch/data
     environment:
@@ -47,20 +43,24 @@ services:
       - es
     volumes:
       - ./api/app/:/app/
-      - ./language-models/:/models/
-    environment:
-      - LOGLEVEL=debug
-      - ES_HOST_URL=${ES_HOST_URL}
+      - ./embedding-models/:/models/
+#    environment:
+#       - LOGLEVEL=debug
     command: /start-reload.sh
     labels:
       - traefik.enable=true
       - traefik.http.routers.${PROJECT_NAME}-api-http.rule=Host(`${PROJECT_NAME}.${DOMAIN}`)
+    ports:
+      - "$PROD_PORT:80"
       
   kibana:
     image: docker.elastic.co/kibana/kibana:7.10.2
+    depends_on:
+      - proxy
+      - es
     environment:
       - SERVER_NAME=kibana.${PROJECT_NAME}.${DOMAIN}
-      - ELASTICSEARCH_HOSTS=${ES_HOST_URL}
+      - ELASTICSEARCH_HOSTS=es
     labels: 
       - traefik.enable=true
       - traefik.http.routers.${PROJECT_NAME}-kibana-http.rule=Host(`kibana.${PROJECT_NAME}.${DOMAIN}`)
