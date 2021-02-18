@@ -37,12 +37,12 @@ DEFAULT:
     - short_name: paraphrase-xlm-r-multi
       full_name: paraphrase-xlm-r-multilingual-v1
       vec_dims: 768
-#    - short_name: quora-distilbert-multi
-#      full_name: quora-distilbert-multilingual
-#      vec_dims: 768
-#    - short_name: stsb-xlm-r-multi
-#      full_name: stsb-xlm-r-multilingual
-#      vec_dims: 768
+    - short_name: quora-distilbert-multi
+      full_name: quora-distilbert-multilingual
+      vec_dims: 768
+    - short_name: stsb-xlm-r-multi
+      full_name: stsb-xlm-r-multilingual
+      vec_dims: 768
   MODEL_DIR: /models
 
 
