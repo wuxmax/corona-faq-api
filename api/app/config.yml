@@ -40,9 +40,9 @@ DEFAULT:
     - short_name: quora-distilbert-multi
       full_name: quora-distilbert-multilingual
       vec_dims: 768
-    - short_name: stsb-xlm-r-multi
-      full_name: stsb-xlm-r-multilingual
-      vec_dims: 768
+#    - short_name: stsb-xlm-r-multi
+#      full_name: stsb-xlm-r-multilingual
+#      vec_dims: 768
   MODEL_DIR: /models
 
 
