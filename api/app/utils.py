@@ -1,18 +1,17 @@
-from typing import Union
-from datetime import datetime
 import hashlib
+import json
 import re
+import subprocess
+from datetime import datetime
+from typing import Union
 
 import requests
-from geopy.geocoders import Nominatim
-
-geolocator = Nominatim(user_agent="corona-faq-api")
 
 
 def get_timestamp():
-    dateTimeObj = datetime.now()
-    timestampStr = dateTimeObj.strftime("%d.%m.%y %H:%M:%S")
-    return timestampStr
+    date_time_obj = datetime.now()
+    timestamp_str = date_time_obj.strftime("%d.%m.%y %H:%M:%S")
+    return timestamp_str
 
 
 def get_html(url) -> str:
@@ -67,17 +66,25 @@ src_id_mapping = {
 
 
 def location_string2src_id(location_string: str) -> Union[str, None]:
-    location = geolocator.geocode(location_string, addressdetails=True)
+
+    result = subprocess.run(["curl",
+                             "-s",  # suppresses output, maybe change to -vs when errors should be displayed
+                             "-XPOST",
+                             f"https://nominatim.openstreetmap.org/search?q={location_string}&format=json&limit=1&addressdetails=1"],
+                            stdout=subprocess.PIPE)
+    result = result.stdout.decode("utf-8")
+    try:
+        location = json.loads(result[1:-1])
+    except json.decoder.JSONDecodeError:
+        return None
 
     if location:
-        state_string = location.raw['address']['state']
+        try:
+            state_string = location['address']['state']
+        except KeyError:
+            return None
         src_id = src_id_mapping.get(state_string, None)
         if src_id:
             return src_id
     
     return None
-
-
-
-
-
