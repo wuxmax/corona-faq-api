@@ -20,6 +20,15 @@ def get_html(url) -> str:
     return html
 
 
+def get_html_via_curl(url: str):
+    result = subprocess.run(["curl",
+                             "-s",  # suppresses output, maybe change to -vs when errors should be displayed
+                             "-XGET",
+                             f"{url}"],
+                            stdout=subprocess.PIPE)
+    return result.stdout.decode("utf-8")
+
+
 umlaut_mapping = {
     "ä": "ae",
     "ü": "ue",
