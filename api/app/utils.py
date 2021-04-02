@@ -61,6 +61,7 @@ src_id_mapping = {
     "Hamburg": "hh",
     "Brandenburg": "bb",
     "Mecklenburg-Vorpommern": "mv",
+    "Saarland": "sl",
     "Sachsen": "sn",
     "Schleswig-Holstein": "sh",
     "Thüringen": "th",
@@ -70,7 +71,8 @@ src_id_mapping = {
     "Rheinland-Pfalz": "rlp",
     "Sachsen-Anhalt": "st",
     "Bremen": "hb",
-    "Hessen": "he"
+    "Hessen": "he"  # ,
+    # "Niedersachsen": "ni"
 }
 
 
