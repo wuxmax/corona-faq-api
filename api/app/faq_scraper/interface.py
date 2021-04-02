@@ -1,16 +1,16 @@
 import importlib
+import logging
 from types import ModuleType
 from typing import List, Tuple
 
-from models import Status, StatusCode, FAQ
-from faq_matcher.index import Index
 from config import c
+from faq_matcher.index import Index
+from models import Status, StatusCode, FAQ
 
-import logging
 logger = logging.getLogger(__name__)
 
-
-ALL_SCRAPERS = ["rki", "bfg", "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he"]
+ALL_SCRAPERS = ["rki", "bfg",
+                "ber", "hh", "bb",  "mv", "sn", "sh", "th", "nrw", "bay", "bw", "rlp", "st", "hb", "he", "sl"]
 
 
 class FAQScraperInterface:

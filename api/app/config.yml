@@ -21,6 +21,7 @@ DEFAULT:
     - st
     - hb
     - he
+    - sl
 
   DEFAULT_SEARCH_MODE: lexical_search_semantic_rerank
 
