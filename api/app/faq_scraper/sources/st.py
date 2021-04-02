@@ -7,7 +7,7 @@ source_id = "st"
 source_name = "Landesportal Sachsen-Anhalt"
 
 topic_urls = [
-    "https://ms.sachsen-anhalt.de/themen/gesundheit/aktuell/coronavirus/fragen-und-antworten/faq-maskenpflicht/",
+    # "https://ms.sachsen-anhalt.de/themen/gesundheit/aktuell/coronavirus/fragen-und-antworten/faq-maskenpflicht/",
     "https://ms.sachsen-anhalt.de/themen/gesundheit/aktuell/coronavirus/coronavirus-impfen/faq-schutzimpfungen/",
     "https://mb.sachsen-anhalt.de/themen/schule-und-unterricht/beginn-des-neuen-schuljahres/"
 ]
