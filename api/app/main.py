@@ -32,12 +32,14 @@ async def root():
     return f"<html><head><title>{app_title}</title></head><body>" \
            f"Welcome! Open /docs to see API documentation.</body></html>"
 
+
 # ------------------------------ #
 # Globals
 
 faq_index = Index(c.INDEX_NAME, data_model=FAQ)
 faq_scraper = FAQScraperInterface(faq_index=faq_index)
 faq_matcher = FAQMatcher(index=faq_index)
+
 
 # ------------------------------ #
 # Endpoints
@@ -55,13 +57,6 @@ async def run_scrapers(update_index: bool = True, return_faqs: bool = False):
         return ScraperResponse(scraper_status=status, faq_data=data)
     else:
         return ScraperResponse(scraper_status=status)
-
-
-# Enums to predefine valid parameter values
-# SearchMode = Enum("SearchMode", faq_matcher.search_modes)
-# ModelName = Enum("ModelName", list(faq_matcher.encoder.models.keys()))
-# default_search_mode = [search_mode for search_mode in SearchMode if search_mode.value == c.DEFAULT_SEARCH_MODE][0]
-# default_model_name = [model_name for model_name in ModelName if model_name.value == c.DEFAULT_MODEL][0]
 
 
 @app.get(

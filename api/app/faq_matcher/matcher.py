@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple, Union, Mapping
 import logging
-import json
+# import json
 
 from elasticsearch import Elasticsearch
 
@@ -47,6 +47,9 @@ class FAQMatcher:
 
         es_query = self.build_query(search_mode, search_string, filter_fields, model, embedding, rerank_weights)
         es_search_results = self.es.search(index=self.index.name, body=es_query)
+
+        # logger.info(f"ES query JSON:\n{json.dumps(es_query)}")
+        # logger.info("ES search results: " + str(es_search_results))
 
         hits = [FAQ(**hit['_source']) for hit in es_search_results['hits']['hits'][:n_hits]]
 
@@ -129,8 +132,6 @@ class FAQMatcher:
                 rescore_query["query"]["rescore_query_weight"] = rerank_weights["rescore_query_weight"]
             query["query"] = lexical_query
             query["rescore"] = rescore_query
-
-        # logger.info(f"ES query JSON:\n{json.dumps(query)}")
 
         return query
 
