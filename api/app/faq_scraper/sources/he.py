@@ -6,12 +6,13 @@ from utils import get_html, question2label
 
 source_id = "he"
 source_name = "Hessische Landesregierung"
-source_url = "https://www.hessen.de/fuer-buerger/corona-hessen/fragen-und-antworten-zu-den-wichtigsten-regelungen"
+source_url = "https://soziales.hessen.de/gesundheit/infektionsschutz/corona-hessen/maskenpflicht-faq"
 
 
 def is_question_tag(tag):
     if tag.string: return tag.string.strip().endswith("?")
     else: return False
+
 
 def make_faq(question_tag, answer_tag, faqs):    
     faq = {}
@@ -26,6 +27,7 @@ def make_faq(question_tag, answer_tag, faqs):
     faq["nationwide"] = False 
 
     faqs.append(FAQ(**faq))    
+
 
 def get_faq():
     html = get_html(source_url)

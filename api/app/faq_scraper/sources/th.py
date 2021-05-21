@@ -23,7 +23,10 @@ def get_faq():
 
 
 def get_topic_faq(topic_url: str):
-    html = get_html(root_url + topic_url)
+    if not topic_url.find("https"):
+        html = get_html(topic_url)
+    else:
+        html = get_html(root_url + topic_url)
     soup = BeautifulSoup(html, features="lxml")
 
     faqs = []

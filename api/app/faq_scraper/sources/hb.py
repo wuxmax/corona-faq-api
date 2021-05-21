@@ -20,15 +20,12 @@ def is_enumeration_tag(tag):
     if tag.string: return enumeration_regex.match(tag.string)
 
 
-def make_faq(question_tag, answer_tag, faqs):    
+def make_faq(html, question_tag, answer_tag, faqs):
     faq = {}
-        
-    if question_tag:
-        faq["q_txt"]: str = question_tag
-    else:
-        faq["q_txt"]: str = ""
-    faq["a_html"]: str = answer_tag.encode_contents()
-    faq["a_txt"]: str = answer_tag.get_text().strip()
+
+    faq["q_txt"]: str = remove_enumeration(html.find(question_tag).text).strip()
+    faq["a_html"]: str = "".join(str(elem) for elem in html.find(answer_tag, {"class": "toggle_abs"}))
+    faq["a_txt"]: str = "".join(str(elem) for elem in html.find(answer_tag, {"class": "toggle_abs"}).text).strip()
     faq["src_id"] = source_id
     faq["src_url"]: str = source_url
     faq["src_name"]: str = source_name
@@ -40,57 +37,12 @@ def make_faq(question_tag, answer_tag, faqs):
 def get_faq():
     html = get_html(source_url)
     soup = BeautifulSoup(html, features="lxml")
-    
-    wrapper_divs = soup.select("div.entry-wrapper-1col.entry-wrapper-normal")
-    statement_only_div = wrapper_divs[1].extract()
-    question_answer_div = soup.select("div.entry-wrapper-1col-toggle.entry-wrapper-normal")
+
+    question_answer_div = soup.find_all("div", {"class": "entry-wrapper-1col-toggle entry-wrapper-normal"})
 
     faqs = []
-        
-    # process statement only info
-    start_tag = statement_only_div.find(string="Für Bremen gilt weiterhin Folgendes:")
-    statement_ps = start_tag.find_all_next("p")
 
-    for statement_p in statement_ps:
-        first_string = statement_p.contents[0]
-        modified_string = remove_enumeration(first_string)
-        modified_contents = [modified_string] + statement_p.contents[1:]
-
-        answer_html = "".join(str(elem) for elem in modified_contents)
-        answer_soup = BeautifulSoup(answer_html, features="lxml")
-
-        make_faq(None, answer_soup, faqs)
-
-    question_answer_tags = question_answer_div
-    len_qa_tags = len(question_answer_tags)
-
-    for i, qa_tag in enumerate(question_answer_tags):
-        new_question_tag = qa_tag.find("h2")
-        question_tag = remove_enumeration(new_question_tag.text)
-
-        answer_tags = qa_tag.find_all("p")
-        is_last_qa_tag = i == len_qa_tags - 1
-
-        # case: found another question tag, stopping to create faq
-        if new_question_tag or is_last_qa_tag:
-            if is_last_qa_tag:
-                answer_tags.append(qa_tag)
-
-            try:
-                assert answer_tags
-            except AssertionError as e:
-                e.args += ("Answer seems to be empty!", "URL: " + source_url)
-
-            if len(answer_tags) > 1:
-                answer_html = "".join(str(tag) for tag in answer_tags)
-                answer_soup = BeautifulSoup(answer_html, features="lxml")
-            else:
-                answer_soup = answer_tags[0]
-
-            make_faq(question_tag, answer_soup, faqs)
-
-        # case: found non-question tag, simply appending to answer
-        else:
-            answer_tags.append(qa_tag)
+    for q_and_a in question_answer_div:
+        make_faq(q_and_a, "a", "div", faqs)
             
     return faqs
