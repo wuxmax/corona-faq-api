@@ -19,7 +19,8 @@ services:
     environment:
        - PORT=$PROD_PORT
        - PRE_START_PATH="/scripts/start-jupyter.sh"
-       - GRACEFUL_TIMEOUT=300
+       - GRACEFUL_TIMEOUT=3000
+       - TIMEOUT=9000
        - WEB_CONCURRENCY=2
     ports:
       - "$PROD_PORT:$PROD_PORT"
