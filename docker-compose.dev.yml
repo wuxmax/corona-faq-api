@@ -60,7 +60,7 @@ services:
       - es
     environment:
       - SERVER_NAME=kibana.${PROJECT_NAME}.${DOMAIN}
-      - ELASTICSEARCH_HOSTS=es
+      - ELASTICSEARCH_HOSTS=http://es:9200
     labels: 
       - traefik.enable=true
       - traefik.http.routers.${PROJECT_NAME}-kibana-http.rule=Host(`kibana.${PROJECT_NAME}.${DOMAIN}`)
